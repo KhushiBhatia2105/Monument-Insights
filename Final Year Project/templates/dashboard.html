@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #5A2D2F;
+            margin: 0;
+            padding: 30px;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            padding: 20px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                width: 85%;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                width: 80%;
+            }
+        }
+
+        /* Header styles */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center items vertically */
+            gap: 25px; /* Increased gap */
+            padding: 15px;
+            background-color: #000000;
+            color: white;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            text-align: center; /* Center text */
+        }
+
+        @media (min-width: 640px) {
+            .header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left; /* Left align on larger screens */
+            }
+            .header-title {
+                margin-right: auto; /* Push buttons to the right */
+                margin-left: auto; /* Center the title */
+                position: relative;
+                left: -50px; /* Adjust for button width */
+            }
+        }
+
+        .header-title {
+            font-size: 1.5rem; /* Slightly larger */
+            font-weight: bold;
+            order: -1; /* Make title appear first */
+        }
+
+        /* Rest of your existing styles remain the same */
+        #logoutButton {
+            background-color: #e3342f;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        #logoutButton:hover {
+            background-color: #cc1f24;
+        }
+
+        #tryOutButton {
+            background-color: #8B4513;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        #tryOutButton:hover {
+            background-color: #A0522D;
+        }
+
+        .monument-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        .monument-card:hover {
+            transform: scale(1.03);
+        }
+
+        .monument-image {
+            width: 100%;
+            height: 280px;
+            object-fit: fill;
+        }
+
+        .monument-info {
+            padding: 12px;
+        }
+
+        .monument-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (min-width: 640px) {
+            .monument-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 768px) {
+            .monument-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .monument-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .monument-card .monument-info h4 {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #5A2D2F;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 25px;
+            border-radius: 10px;
+            width: 85%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: modalopen 0.5s;
+        }
+
+        @keyframes modalopen {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .modal-header {
+            padding: 10px 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            color: #5A2D2F;
+            margin: 0;
+            font-weight: bold;
+            font-size: 1.8rem;
+        }
+
+        .modal-body {
+            padding: 10px 0;
+        }
+
+        .modal-image-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 250px;
+            object-fit: contain;
+            border-radius: 5px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .modal-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .modal-details {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+
+        .detail-item {
+            margin-bottom: 10px;
+        }
+
+        .detail-title {
+            font-weight: bold;
+            color: #5A2D2F;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        /* Rest of your existing styles remain the same */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">Monument Insight Overview</div>
+            <div class="button-container">
+                <a href="/monument" id="tryOutButton">Try Out</a>
+                <form action="{{ url_for('logout') }}" method="POST" style="display: inline;">
+                    <button type="submit" id="logoutButton">Logout</button>
+                </form>
+            </div>
+        </div>
+        
+        <p class="mt-4 text-center text-gray-700">Explore the rich culture and history of India's famous monuments.</p>
+
+        <h3 class="text-xl font-semibold mt-8 text-[#5A2D2F] text-center">Top Famous Monuments in India</h3>
+
+        <div class="monument-grid">
+            <!-- Monument cards with onclick handlers -->
+            <div class="monument-card" onclick="openModal('Ajanta Caves', 'ajanata.jpeg', 'The Ajanta Caves are 30 rock-cut Buddhist cave monuments dating from the 2nd century BCE to about 480 CE in the Aurangabad district of Maharashtra. The caves include paintings and rock-cut sculptures described as among the finest surviving examples of ancient Indian art, particularly expressive paintings that present emotions through gesture, pose and form.')">
+                <img src="{{ url_for('static', filename='images/ajanata.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Ajanta Caves</h4>
+                </div>
+            </div>
+                    
+            <div class="monument-card" onclick="openModal('Charar-E- Sharif', 'Charar.jpg', 'Charar-E- Sharif is a famous Muslim shrine located in the town of Charari Sharief in Jammu and Kashmir. It is dedicated to the Sufi saint Sheikh Noor-ud-din Noorani, also known as Nund Rishi. The shrine is an excellent example of Kashmiri wooden architecture and is visited by people of all faiths.')">
+                <img src="{{ url_for('static', filename='images/Charar.jpg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Charar-E- Sharif</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Chhota Imambara', 'Chhota.jpg', 'The Chhota Imambara, also known as the Hussainabad Imambara, is a monument located in Lucknow, Uttar Pradesh. Built in 1838 by Muhammad Ali Shah, the third Nawab of Awadh, it served as a congregation hall for Shia Muslims. The Imambara is known for its exquisite decorations, especially during Muharram, when it is illuminated with glass lamps and decorated with tazias.')">
+                <img src="{{ url_for('static', filename='images/Chhota.jpg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Chhota Imambara</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Ellora Caves', 'Ellora.jpg', 'The Ellora Caves are a UNESCO World Heritage Site located in the Aurangabad district of Maharashtra. These 34 monasteries and temples, extending over more than 2 km, were dug side by side in the wall of a high basalt cliff. The caves represent Buddhist, Hindu and Jain religious art between 600-1000 CE. The Kailasa temple (Cave 16) is particularly remarkable as it is the largest single monolithic rock excavation in the world.')">
+                <img src="{{ url_for('static', filename='images/Ellora.jpg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Ellora Caves</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Fatehpur Sikri', 'Fatehpur.jpg', 'Fatehpur Sikri is a city in the Agra district of Uttar Pradesh, founded by the Mughal Emperor Akbar in 1571. It served as the capital of the Mughal Empire from 1571 to 1585. The city is a blend of architectural excellence and religious beliefs, with structures like Buland Darwaza, Jama Masjid, and the tomb of Salim Chishti. It was abandoned shortly after its completion due to water shortage.')">
+                <img src="{{ url_for('static', filename='images/Fatehpur.jpg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Fatehpur Sikri</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Gateway of India', 'Gateway.jpg', 'The Gateway of India is an arch monument built during the 20th century in Mumbai. Located on the waterfront in the Apollo Bunder area, it was erected to commemorate the landing of King-Emperor George V and Queen-Empress Mary at Apollo Bunder in December 1911. The foundation stone was laid in 1911 and the construction was completed in 1924. The structure is a combination of Hindu and Muslim architectural styles.')">
+                <img src="{{ url_for('static', filename='images/Gateway.jpg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Gateway of India</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Humayun\'s Tomb', 'Humayun.jpeg', 'Humayun\'s Tomb is the tomb of the Mughal Emperor Humayun in Delhi. Commissioned by his first wife and chief consort, Empress Bega Begum, in 1569-70, it was the first garden-tomb on the Indian subcontinent. The tomb was declared a UNESCO World Heritage Site in 1993, and is set in a geometrically arranged garden crisscrossed by water channels, typical of Persian gardens.')">
+                <img src="{{ url_for('static', filename='images/Humayun.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Humayun's Tomb</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('India Gate', 'download.jpeg', 'India Gate is a war memorial located astride the Rajpath in New Delhi. Originally called the All India War Memorial, it is a 42-meter tall arch that commemorates the 70,000 Indian soldiers who lost their lives fighting for the British Army during World War I. The names of the soldiers are inscribed on the walls. Beneath it lies the Amar Jawan Jyoti, the flame of the immortal soldier, which was added after independence to honor soldiers who died in the Indo-Pakistan War of 1971.')">
+                <img src="{{ url_for('static', filename='images/download.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>India Gate</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Khajuraho', 'Khajuraho.jpeg', 'The Khajuraho Group of Monuments are a group of Hindu and Jain temples in Chhatarpur district, Madhya Pradesh. Built between 950-1050 CE by the Chandela dynasty, the temples are famous for their nagara-style architectural symbolism and their erotic sculptures. Only about 20 temples remain of the original 85. They were declared a UNESCO World Heritage Site in 1986 and represent one of the finest examples of medieval Indian architecture.')">
+                <img src="{{ url_for('static', filename='images/Khajuraho.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Khajuraho</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Sun Temple Konark', 'Konark.jpeg', 'The Konark Sun Temple is a 13th-century CE Sun temple at Konark in Odisha. The temple is attributed to king Narasimhadeva I of the Eastern Ganga Dynasty. Shaped like a giant chariot with elaborately carved stone wheels, pillars and walls, it is dedicated to the Hindu sun god Surya. A major part of the temple is now in ruins but what remains still showcases the incredible artistry of the sculptors. It was declared a UNESCO World Heritage Site in 1984.')">
+                <img src="{{ url_for('static', filename='images/Konark.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Sun Temple Konark</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Alai Darwaza', 'Alai.jpeg', 'The Alai Darwaza is the main gateway from southern side of the Quwwat-ul-Islam Mosque in the Qutub complex, Delhi. Built by Sultan Alauddin Khilji in 1311, it is a masterpiece of Indo-Islamic architecture. The Darwaza is decorated with red sandstone and white marble inlays, along with inscriptions in Naskh script and latticed stone screens. It is considered one of the most important buildings built in the Delhi sultanate period.')">
+                <img src="{{ url_for('static', filename='images/Alai.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Alai Darwaza</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Alai Minar', 'Minar.jpeg', 'The Alai Minar is an incomplete tower in the Qutub complex, Delhi. Sultan Alauddin Khilji started building this tower with the intention of making it twice the height of the Qutub Minar. However, the construction was abandoned after the death of Alauddin in 1316. The first storey of the minar, built of rubble masonry, stands at about 25 meters, just a quarter of its intended height.')">
+                <img src="{{ url_for('static', filename='images/Minar.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Alai Minar</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Basilica of Bom Jesus', 'Basilica.jpeg', 'The Basilica of Bom Jesus is a UNESCO World Heritage Site located in Goa. It holds the mortal remains of St. Francis Xavier and is one of the oldest churches in India, completed in 1605. The church is called "Bom Jesus" meaning "Good Jesus" or "Infant Jesus". The church is known for its Baroque architecture and is particularly noted for its gilded altars and the ornate interior.')">
+                <img src="{{ url_for('static', filename='images/Basilica.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Basilica of Bom Jesus</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Charminar', 'Charminar.jpeg', 'The Charminar is a monument and mosque located in Hyderabad. Constructed in 1591, it is a landmark of the city and officially incorporated in the emblem of Telangana. The structure was built to commemorate the eradication of plague from the city. The Charminar is a square structure with four grand arches facing the four cardinal directions. Each minaret is 56 meters high and the structure is known for its intricate stucco decorations.')">
+                <img src="{{ url_for('static', filename='images/Charminar.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Charminar</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Golden Temple', 'Golden.jpeg', 'The Golden Temple (Harmandir Sahib) is the holiest Gurdwara of Sikhism, located in Amritsar, Punjab. The temple was built in the 16th century by Guru Arjan Dev, with the Adi Granth installed inside. The temple is surrounded by the Amrit Sarovar (pool of nectar) and is known for its gold-plated upper levels added by Maharaja Ranjit Singh in the 19th century. The temple complex is open to people of all faiths and serves free meals to thousands daily.')">
+                <img src="{{ url_for('static', filename='images/Golden.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Golden Temple</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Hawa Mahal', 'Hawa.jpeg', 'The Hawa Mahal is a palace in Jaipur, built in 1799 by Maharaja Sawai Pratap Singh. The five-story structure is made of red and pink sandstone and has 953 small windows (jharokhas) decorated with intricate latticework. The palace was designed to allow royal ladies to observe everyday life in the street below without being seen. Its unique honeycomb structure provides excellent ventilation, giving it the name "Palace of Winds".')">
+                <img src="{{ url_for('static', filename='images/Hawa.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Hawa Mahal</h4>
+                </div>
+            </div>
+            <div class="monument-card" onclick="openModal('Iron Pillar', 'iron_pillar.jpeg', 'The Iron Pillar of Delhi is a 7.21-meter tall structure known for its rust-resistant composition of metals. Located in the Qutub Complex, it dates back to the 4th century CE and is thought to have been crafted during the reign of Chandragupta II.')">
+                <img src="{{ url_for('static', filename='images/iron.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Iron Pillar</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Jamali Kamali Tomb', 'jamali_kamali_tomb.jpeg', 'Located in Mehrauli, Delhi, the Jamali Kamali Tomb and Mosque is an architectural and historical site from the Mughal era. Built in 1528, it houses the graves of the Sufi saint Jamali and his companion Kamali.')">
+                <img src="{{ url_for('static', filename='images/JJamali.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Jamali Kamali Tomb</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Lotus Temple', 'lotus_temple.jpeg', 'The Lotus Temple in Delhi is a Baháʼí House of Worship completed in 1986. Renowned for its flowerlike shape, it serves as a symbol of peace, unity, and purity. It is open to people of all faiths.')">
+                <img src="{{ url_for('static', filename='images/Lotus.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Lotus Temple</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Mysore Palace', 'mysore_palace.jpeg', 'Mysore Palace, also known as Amba Vilas Palace, is a historical palace and royal residence in Mysore, Karnataka. Built in the Indo-Saracenic style, it is one of the most visited monuments in India.')">
+                <img src="{{ url_for('static', filename='images/Mysore.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Mysore Palace</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Qutub Minar', 'qutub_minar.jpeg', 'Qutub Minar is a UNESCO World Heritage Site located in Delhi. Standing at 73 meters, it is the tallest brick minaret in the world, built in 1193 by Qutb-ud-din Aibak to celebrate Muslim dominance in Delhi.')">
+                <img src="{{ url_for('static', filename='images/Qutub.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Qutub Minar</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Taj Mahal', 'tajmahal.jpeg', 'The Taj Mahal is a white marble mausoleum in Agra, built by Mughal Emperor Shah Jahan in memory of his wife Mumtaz Mahal. A UNESCO World Heritage Site, it is an iconic symbol of love and Mughal architecture.')">
+                <img src="{{ url_for('static', filename='images/Taj.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Taj Mahal</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Tanjavur Temple', 'tanjavur_temple.jpeg', 'The Brihadeeswarar Temple in Thanjavur, Tamil Nadu, is a Hindu temple dedicated to Lord Shiva. Built by Raja Raja Chola I in the 11th century, it is an architectural marvel and a UNESCO World Heritage Site.')">
+                <img src="{{ url_for('static', filename='images/Tanjavur.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Tanjavur Temple</h4>
+                </div>
+            </div>
+            
+            <div class="monument-card" onclick="openModal('Victoria Memorial', 'victoria_memorial.jpeg', 'The Victoria Memorial in Kolkata is a large marble building built between 1906 and 1921. Dedicated to Queen Victoria, it now serves as a museum and is a major tourist attraction in West Bengal.')">
+                <img src="{{ url_for('static', filename='images/Victoria.jpeg') }}" class="monument-image">
+                <div class="monument-info">
+                    <h4>Victoria Memorial</h4>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- The Enhanced Modal -->
+    <div id="monumentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-header">
+                <h2 id="modalTitle">Monument Title</h2>
+            </div>
+            <div class="modal-body">
+                <div class="modal-image-container">
+                    <img id="modalImage" class="modal-image" src="">
+                </div>
+                <div class="modal-description">
+                    <p id="modalDescription">Monument description will appear here.</p>
+                </div>
+                <div class="modal-details">
+                    <div class="detail-item">
+                        <span class="detail-title">Location:</span>
+                        <span id="modalLocation">Not specified</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-title">Built in:</span>
+                        <span id="modalBuilt">Not specified</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-title">Famous for:</span>
+                        <span id="modalFamous">Not specified</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Monument data with additional details
+        const monumentData = {
+            "Ajanta Caves": {
+                image: "ajanata.jpeg",
+                description: "The Ajanta Caves are 30 rock-cut Buddhist cave monuments dating from the 2nd century BCE to about 480 CE in the Aurangabad district of Maharashtra. The caves include paintings and rock-cut sculptures described as among the finest surviving examples of ancient Indian art, particularly expressive paintings that present emotions through gesture, pose and form.",
+                location: "Aurangabad, Maharashtra",
+                built: "2nd century BCE to 480 CE",
+                famous: "Ancient Buddhist art and architecture"
+            },
+            "Charar-E- Sharif": {
+                image: "Charar.jpg",
+                description: "Charar-E- Sharif is a famous Muslim shrine located in the town of Charari Sharief in Jammu and Kashmir. It is dedicated to the Sufi saint Sheikh Noor-ud-din Noorani, also known as Nund Rishi.",
+                location: "Charari Sharief, Jammu and Kashmir",
+                built: "14th century",
+                famous: "Sufi shrine and Kashmiri wooden architecture"
+            },
+            "Chhota Imambara": {
+                image: "Chhota.jpg",
+                description: "The Chhota Imambara, also known as the Hussainabad Imambara, is a monument located in Lucknow, Uttar Pradesh. Built in 1838 by Muhammad Ali Shah, the third Nawab of Awadh, it served as a congregation hall for Shia Muslims.",
+                location: "Lucknow, Uttar Pradesh",
+                built: "1838",
+                famous: "Exquisite decorations and Muharram celebrations"
+            },
+            "Ellora Caves": {
+                image: "Ellora.jpg",
+                description: "The Ellora Caves are a UNESCO World Heritage Site located in the Aurangabad district of Maharashtra. These 34 monasteries and temples, extending over more than 2 km, were dug side by side in the wall of a high basalt cliff.",
+                location: "Aurangabad, Maharashtra",
+                built: "600-1000 CE",
+                famous: "Combination of Buddhist, Hindu and Jain monuments"
+            },
+            "Fatehpur Sikri": {
+                image: "Fatehpur.jpg",
+                description: "Fatehpur Sikri is a city in the Agra district of Uttar Pradesh, founded by the Mughal Emperor Akbar in 1571. It served as the capital of the Mughal Empire from 1571 to 1585.",
+                location: "Agra, Uttar Pradesh",
+                built: "1571",
+                famous: "Mughal architecture and historical significance"
+            },
+            "Gateway of India": {
+                image: "Gateway.jpg",
+                description: "The Gateway of India is an arch monument built during the 20th century in Mumbai. Located on the waterfront in the Apollo Bunder area, it was erected to commemorate the landing of King-Emperor George V and Queen-Empress Mary at Apollo Bunder in December 1911.",
+                location: "Mumbai, Maharashtra",
+                built: "1911-1924",
+                famous: "Colonial architecture and Mumbai landmark"
+            },
+            "Humayun's Tomb": {
+                image: "Humayun.jpeg",
+                description: "Humayun's Tomb is the tomb of the Mughal Emperor Humayun in Delhi. Commissioned by his first wife and chief consort, Empress Bega Begum, in 1569-70, it was the first garden-tomb on the Indian subcontinent.",
+                location: "Delhi",
+                built: "1569-1570",
+                famous: "Precursor to the Taj Mahal and Mughal architecture"
+            },
+            "India Gate": {
+                image: "download.jpeg",
+                description: "India Gate is a war memorial located astride the Rajpath in New Delhi. Originally called the All India War Memorial, it is a 42-meter tall arch that commemorates the 70,000 Indian soldiers who lost their lives fighting for the British Army during World War I.",
+                location: "New Delhi",
+                built: "1921-1931",
+                famous: "War memorial and national monument"
+            },
+            "Khajuraho": {
+                image: "Khajuraho.jpeg",
+                description: "The Khajuraho Group of Monuments are a group of Hindu and Jain temples in Chhatarpur district, Madhya Pradesh. Built between 950-1050 CE by the Chandela dynasty, the temples are famous for their nagara-style architectural symbolism.",
+                location: "Chhatarpur, Madhya Pradesh",
+                built: "950-1050 CE",
+                famous: "Erotic sculptures and medieval Indian architecture"
+            },
+            "Sun Temple Konark": {
+                image: "Konark.jpeg",
+                description: "The Konark Sun Temple is a 13th-century CE Sun temple at Konark in Odisha. The temple is attributed to king Narasimhadeva I of the Eastern Ganga Dynasty. Shaped like a giant chariot with elaborately carved stone wheels, pillars and walls, it is dedicated to the Hindu sun god Surya.",
+                location: "Konark, Odisha",
+                built: "13th century",
+                famous: "Sun temple shaped like a chariot"
+            },
+            "Alai Darwaza": {
+                image: "Alai.jpeg",
+                description: "The Alai Darwaza is the main gateway from southern side of the Quwwat-ul-Islam Mosque in the Qutub complex, Delhi. Built by Sultan Alauddin Khilji in 1311, it is a masterpiece of Indo-Islamic architecture.",
+                location: "Delhi",
+                built: "1311",
+                famous: "Indo-Islamic architecture"
+            },
+            "Alai Minar": {
+                image: "Minar.jpeg",
+                description: "The Alai Minar is an incomplete tower in the Qutub complex, Delhi. Sultan Alauddin Khilji started building this tower with the intention of making it twice the height of the Qutub Minar.",
+                location: "Delhi",
+                built: "Started in 1311 (incomplete)",
+                famous: "Unfinished historical monument"
+            },
+            "Basilica of Bom Jesus": {
+                image: "Basilica.jpeg",
+                description: "The Basilica of Bom Jesus is a UNESCO World Heritage Site located in Goa. It holds the mortal remains of St. Francis Xavier and is one of the oldest churches in India, completed in 1605.",
+                location: "Goa",
+                built: "1605",
+                famous: "Holds remains of St. Francis Xavier"
+            },
+            "Charminar": {
+                image: "Charminar.jpeg",
+                description: "The Charminar is a monument and mosque located in Hyderabad. Constructed in 1591, it is a landmark of the city and officially incorporated in the emblem of Telangana.",
+                location: "Hyderabad, Telangana",
+                built: "1591",
+                famous: "Iconic landmark of Hyderabad"
+            },
+            "Golden Temple": {
+                image: "Golden.jpeg",
+                description: "The Golden Temple (Harmandir Sahib) is the holiest Gurdwara of Sikhism, located in Amritsar, Punjab. The temple was built in the 16th century by Guru Arjan Dev, with the Adi Granth installed inside.",
+                location: "Amritsar, Punjab",
+                built: "16th century",
+                famous: "Sikhism's holiest shrine and community kitchen"
+            },
+            "Hawa Mahal": {
+                image: "Hawa.jpeg",
+                description: "The Hawa Mahal is a palace in Jaipur, built in 1799 by Maharaja Sawai Pratap Singh. The five-story structure is made of red and pink sandstone and has 953 small windows (jharokhas) decorated with intricate latticework.",
+                location: "Jaipur, Rajasthan",
+                built: "1799",
+                famous: "Palace of Winds with intricate latticework"
+            },
+            "Iron Pillar": {
+        "image": "iron.jpeg",
+        "description": "The Iron Pillar of Delhi is renowned for its rust-resistant composition of metals. It stands within the Qutub Complex and is a testament to ancient Indian metallurgy.",
+        "location": "Qutub Complex, Delhi",
+        "built": "4th century CE",
+        "famous": "Rust-resistant iron and historical significance"
+    },
+    "Jamali Kamali Tomb": {
+        "image": "JJamali.jpeg",
+        "description": "Located in Mehrauli, Delhi, this tomb and mosque complex houses the remains of the Sufi saint Jamali and his companion Kamali.",
+        "location": "Mehrauli, Delhi",
+        "built": "1528",
+        "famous": "Mughal architecture and mystical legends"
+    },
+    "Lotus Temple": {
+        "image": "Lotus.jpeg",
+        "description": "The Lotus Temple is a Baháʼí House of Worship known for its flower-like architecture and open-door policy for people of all faiths.",
+        "location": "New Delhi",
+        "built": "1986",
+        "famous": "Lotus-shaped architecture and spiritual inclusiveness"
+    },
+    "Mysore Palace": {
+        "image": "Mysore.jpeg",
+        "description": "Also known as Amba Vilas Palace, this grand structure is the former royal residence of the Wadiyar dynasty in Karnataka.",
+        "location": "Mysore, Karnataka",
+        "built": "1912 (rebuilt)",
+        "famous": "Indo-Saracenic architecture and Dasara celebrations"
+    },
+    "Qutub Minar": {
+        "image": "Qutub.jpeg",
+        "description": "Qutub Minar is a UNESCO World Heritage Site and the tallest brick minaret in the world, representing early Indo-Islamic architecture.",
+        "location": "Delhi",
+        "built": "1193",
+        "famous": "Height, inscriptions, and Indo-Islamic style"
+    },
+    "Taj Mahal": {
+        "image": "Taj.jpeg",
+        "description": "Commissioned by Shah Jahan in memory of his wife Mumtaz Mahal, the Taj Mahal is a white marble mausoleum and a UNESCO World Heritage Site.",
+        "location": "Agra, Uttar Pradesh",
+        "built": "1632",
+        "famous": "Symbol of love and Mughal architecture"
+    },
+    "Tanjavur Temple": {
+        "image": "Tanjavur.jpeg",
+        "description": "The Brihadeeswarar Temple is a Chola dynasty temple dedicated to Lord Shiva, known for its massive vimana and intricate carvings.",
+        "location": "Thanjavur, Tamil Nadu",
+        "built": "1010 CE",
+        "famous": "Dravidian architecture and Chola heritage"
+    },
+    "Victoria Memorial": {
+        "image": "Victoria.jpeg",
+        "description": "This grand marble structure in Kolkata was built in honor of Queen Victoria and now functions as a museum showcasing British-era artifacts.",
+        "location": "Kolkata, West Bengal",
+        "built": "1906–1921",
+        "famous": "Colonial architecture and museum collections"
+    }
+        };
+
+        // Function to open modal with monument details
+        function openModal(title) {
+            const data = monumentData[title];
+            if (!data) return;
+            
+            const modal = document.getElementById('monumentModal');
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalImage').src = "{{ url_for('static', filename='images/') }}" + data.image;
+            document.getElementById('modalDescription').textContent = data.description;
+            document.getElementById('modalLocation').textContent = data.location;
+            document.getElementById('modalBuilt').textContent = data.built;
+            document.getElementById('modalFamous').textContent = data.famous;
+            modal.style.display = 'block';
+        }
+
+        // Function to close modal
+        function closeModal() {
+            document.getElementById('monumentModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('monumentModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

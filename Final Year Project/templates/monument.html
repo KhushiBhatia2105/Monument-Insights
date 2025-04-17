@@ -1,0 +1,459 @@
+<html lang="en">
+<head>
+    <title>Monument Prediction</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 400px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+        .logout-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+        }
+        .places-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .places-column {
+            flex: 1;
+            min-width: 200px;
+            background-color: #f8f8f8;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .places-column h4 {
+            margin-bottom: 0.5rem;
+            color: #5A2D2F;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        #hotels, #restaurants, #cafes, #attractions {
+            list-style-type: none;
+            padding-left: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        #hotels li, #restaurants li, #cafes li, #attractions li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .place-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+            font-size: 12px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+        .error {
+            color: #e53e3e;
+            font-style: italic;
+        }
+        @media (max-width: 768px) {
+            .places-column {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#5A2D2F] min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-6xl mx-auto p-6 relative">
+        <!-- Logout Button at Top-Right -->
+        <form action="{{ url_for('logout') }}" method="POST" class="logout-button">
+            <button type="submit" class="bg-red-600 text-white py-1.5 px-4 rounded-md hover:bg-red-700 transition duration-300 text-sm">
+                Logout
+            </button>
+        </form>
+
+        <!-- Centered Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-[#5A2D2F]">Monument Prediction</h1>
+            <p class="text-gray-600 mt-2">Upload an image of an Indian monument to identify it and find nearby places</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Left Section -->
+            <div class="w-full md:w-1/2">
+                <!-- Upload Form -->
+                <form id="uploadForm" enctype="multipart/form-data" class="mb-6 flex flex-col gap-4 items-center p-6 bg-gray-50 rounded-lg">
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Select Monument Image</label>
+                        <input type="file" id="fileInput" name="file" accept="image/*" required
+                            class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-md file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-[#5A2D2F] file:text-white
+                                hover:file:bg-[#8B4513]" />
+                    </div>
+                    <button type="submit"
+                            class="bg-[#8B4513] text-white py-2 px-6 rounded-md hover:bg-[#A0522D] transition duration-300 flex items-center justify-center gap-2">
+                        <span>Upload and Predict</span>
+                        <div id="loadingSpinner"
+                             class="hidden animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    </button>
+                </form>
+
+                <!-- Prediction Result -->
+                <div id="result" class="mb-6 p-6 bg-gray-50 rounded-lg">
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <p class="text-gray-700"><strong class="text-[#5A2D2F]">Monument:</strong> <span id="monumentName">-</span></p>
+                        </div>
+                        <div id="monumentImagePreview" class="hidden w-24 h-24 bg-gray-200 rounded overflow-hidden">
+                            <img id="previewImage" src="#" alt="Preview" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nearby Places -->
+                <div id="placesSection" class="hidden">
+                    <h3 class="text-lg font-semibold mb-2 text-[#5A2D2F]">Nearby Places:</h3>
+                    <div class="places-container">
+                        <div class="places-column">
+                            <h4><b>Hotels</b></h4>
+                            <ul id="hotels" class="text-gray-700">
+                                <li class="loading">Loading hotels...</li>
+                            </ul>
+                        </div>
+                        <div class="places-column">
+                            <h4><b>Restaurants</b></h4>
+                            <ul id="restaurants" class="text-gray-700">
+                                <li class="loading">Loading restaurants...</li>
+                            </ul>
+                        </div>
+                        <div class="places-column">
+                            <h4><b>Cafes</b></h4>
+                            <ul id="cafes" class="text-gray-700">
+                                <li class="loading">Loading cafes...</li>
+                            </ul>
+                        </div>
+                        <div class="places-column">
+                            <h4><b>Attractions</b></h4>
+                            <ul id="attractions" class="text-gray-700">
+                                <li class="loading">Loading attractions...</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Section -->
+            <div class="w-full md:w-1/2">
+                <!-- Map Section -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-semibold mb-2 text-[#5A2D2F]">Location Map</h3>
+                    <div id="map" class="rounded-lg overflow-hidden shadow-md"></div>
+                    <div id="mapInstructions" class="text-sm text-gray-600 mt-2">
+                        Map will appear after monument identification
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        let map;
+        let markers = [];
+        const categoryColors = {
+            "hotel": "#10B981", // green
+            "restaurant": "#3B82F6", // blue
+            "cafe": "#8B5CF6", // purple
+            "tourist_attraction": "#F59E0B" // orange
+        };
+
+        // Initialize map with default view (India)
+        function initDefaultMap() {
+            map = L.map('map').setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            document.getElementById('mapInstructions').textContent = 'Upload a monument image to see its location';
+        }
+
+        // Initialize map with monument location
+        function initMonumentMap(lat, lng, monumentName, nearbyPlaces) {
+            if (map) {
+                map.setView([lat, lng], 15);
+            } else {
+                map = L.map('map').setView([lat, lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
+                }).addTo(map);
+            }
+
+            // Clear existing markers
+            clearMarkers();
+
+            // Add monument marker (red)
+            const monumentMarker = L.marker([lat, lng], {
+                icon: L.divIcon({
+                    html: '<div style="background-color: #EF4444; border-radius: 50%; width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; color: white; font-size: 14px;">🏛</div>',
+                    className: 'monument-marker',
+                    iconSize: [28, 28]
+                })
+            })
+            .addTo(map)
+            .bindPopup(`<b>${monumentName}</b><br>Monument`)
+            .openPopup();
+            
+            markers.push(monumentMarker);
+
+            // Add nearby places markers
+            nearbyPlaces.forEach(place => {
+                if (place.location && place.category) {
+                    const marker = L.marker([place.location[0], place.location[1]], {
+                        icon: L.divIcon({
+                            html: `<div style="background-color: ${categoryColors[place.category] || '#3B82F6'}; border-radius: 50%; width: 24px; height: 24px; display: flex; justify-content: center; align-items: center; color: white; font-size: 12px;">${getIconForCategory(place.category)}</div>`,
+                            className: 'place-marker',
+                            iconSize: [24, 24]
+                        })
+                    })
+                    .addTo(map)
+                    .bindPopup(`<b>${place.name}</b><br>${formatCategoryName(place.category)}`);
+                    
+                    markers.push(marker);
+                }
+            });
+
+            updatePlacesLists(nearbyPlaces);
+            document.getElementById('placesSection').classList.remove('hidden');
+            document.getElementById('mapInstructions').textContent = 'Click on markers for more information';
+        }
+
+        function clearMarkers() {
+            markers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+            markers = [];
+        }
+
+        function getIconForCategory(category) {
+            const icons = {
+                "hotel": "🏨",
+                "restaurant": "🍽️",
+                "cafe": "☕",
+                "tourist_attraction": "🏛️"
+            };
+            return icons[category] || "📍";
+        }
+
+        function formatCategoryName(category) {
+            return category.replace('_', ' ')
+                          .split(' ')
+                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                          .join(' ');
+        }
+
+        function updatePlacesLists(nearbyPlaces) {
+            const hotelsList = document.getElementById("hotels");
+            const restaurantsList = document.getElementById("restaurants");
+            const cafesList = document.getElementById("cafes");
+            const attractionsList = document.getElementById("attractions");
+            
+            // Clear existing content
+            hotelsList.innerHTML = "";
+            restaurantsList.innerHTML = "";
+            cafesList.innerHTML = "";
+            attractionsList.innerHTML = "";
+
+            // Filter places by category
+            const hotels = nearbyPlaces.filter(place => place.category === "hotel").slice(0, 5);
+            const restaurants = nearbyPlaces.filter(place => place.category === "restaurant").slice(0, 5);
+            const cafes = nearbyPlaces.filter(place => place.category === "cafe").slice(0, 5);
+            const attractions = nearbyPlaces.filter(place => place.category === "tourist_attraction").slice(0, 5);
+
+            // Populate hotels list
+            if (hotels.length === 0) {
+                hotelsList.innerHTML = "<li class='error'>No nearby hotels found</li>";
+            } else {
+                hotels.forEach(place => {
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<span class="place-icon" style="background-color: ${categoryColors.hotel}">🏨</span>${place.name}`;
+                    listItem.addEventListener('click', () => {
+                        map.setView([place.location[0], place.location[1]], 16);
+                    });
+                    hotelsList.appendChild(listItem);
+                });
+            }
+
+            // Populate restaurants list
+            if (restaurants.length === 0) {
+                restaurantsList.innerHTML = "<li class='error'>No nearby restaurants found</li>";
+            } else {
+                restaurants.forEach(place => {
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<span class="place-icon" style="background-color: ${categoryColors.restaurant}">🍽️</span>${place.name}`;
+                    listItem.addEventListener('click', () => {
+                        map.setView([place.location[0], place.location[1]], 16);
+                    });
+                    restaurantsList.appendChild(listItem);
+                });
+            }
+
+            // Populate cafes list
+            if (cafes.length === 0) {
+                cafesList.innerHTML = "<li class='error'>No nearby cafes found</li>";
+            } else {
+                cafes.forEach(place => {
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<span class="place-icon" style="background-color: ${categoryColors.cafe}">☕</span>${place.name}`;
+                    listItem.addEventListener('click', () => {
+                        map.setView([place.location[0], place.location[1]], 16);
+                    });
+                    cafesList.appendChild(listItem);
+                });
+            }
+
+            // Populate attractions list
+            if (attractions.length === 0) {
+                attractionsList.innerHTML = "<li class='error'>No nearby attractions found</li>";
+            } else {
+                attractions.forEach(place => {
+                    const listItem = document.createElement("li");
+                    listItem.innerHTML = `<span class="place-icon" style="background-color: ${categoryColors.tourist_attraction}">🏛️</span>${place.name}`;
+                    listItem.addEventListener('click', () => {
+                        map.setView([place.location[0], place.location[1]], 16);
+                    });
+                    attractionsList.appendChild(listItem);
+                });
+            }
+        }
+
+        async function fetchNearbyPlaces(lat, lng, monumentName) {
+            try {
+                // Show loading state
+                document.getElementById("hotels").innerHTML = "<li class='loading'>Loading hotels...</li>";
+                document.getElementById("restaurants").innerHTML = "<li class='loading'>Loading restaurants...</li>";
+                document.getElementById("cafes").innerHTML = "<li class='loading'>Loading cafes...</li>";
+                document.getElementById("attractions").innerHTML = "<li class='loading'>Loading attractions...</li>";
+                
+                const response = await fetch(`/monument/nearby?lat=${lat}&lng=${lng}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch nearby places');
+                }
+                const places = await response.json();
+                
+                if (places.length === 0) {
+                    throw new Error('No nearby places found');
+                }
+                
+                // Initialize map with real data
+                initMonumentMap(lat, lng, monumentName, places);
+            } catch (error) {
+                console.error("Error fetching nearby places:", error);
+                
+                // Fallback with dummy data if API fails
+                const nearbyPlaces = [
+                    { name: "Heritage Hotel", location: [lat + 0.001, lng + 0.001], category: "hotel" },
+                    { name: "Grand Palace Hotel", location: [lat + 0.002, lng - 0.001], category: "hotel" },
+                    { name: "Taj Restaurant", location: [lat + 0.0015, lng + 0.0005], category: "restaurant" },
+                    { name: "Spice Garden", location: [lat - 0.001, lng + 0.0015], category: "restaurant" },
+                    { name: "Cafe Mocha", location: [lat + 0.0015, lng + 0.0005], category: "cafe" },
+                    { name: "Coffee Bean", location: [lat + 0.0025, lng - 0.0005], category: "cafe" },
+                    { name: "Tourist Information Center", location: [lat + 0.0005, lng + 0.0005], category: "tourist_attraction" },
+                    { name: "City Museum", location: [lat - 0.001, lng + 0.003], category: "tourist_attraction" },
+                ];
+                initMonumentMap(lat, lng, monumentName, nearbyPlaces);
+            }
+        }
+
+        // File input preview
+        document.getElementById("fileInput").addEventListener("change", function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("monumentImagePreview").classList.remove("hidden");
+                    document.getElementById("previewImage").src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            } else {
+                document.getElementById("monumentImagePreview").classList.add("hidden");
+            }
+        });
+
+        // Form submission
+        document.getElementById("uploadForm").onsubmit = async function (event) {
+            event.preventDefault();
+            const fileInput = document.getElementById("fileInput");
+            
+            if (!fileInput.files[0]) {
+                alert("Please select an image file first");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const spinner = document.getElementById("loadingSpinner");
+            spinner.classList.remove("hidden");
+
+            try {
+                const response = await fetch("/monument", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Prediction failed');
+                }
+                
+                const data = await response.json();
+                document.getElementById("monumentName").innerText = data.monument_type;
+                
+                if (data.coordinates && data.coordinates.length === 2) {
+                    const [lat, lng] = data.coordinates;
+                    await fetchNearbyPlaces(lat, lng, data.monument_type);
+                } else {
+                    throw new Error('No coordinates available');
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("monumentName").innerText = "Error identifying monument";
+                document.getElementById("monumentLocation").innerText = "Location data unavailable";
+                
+                // Show error in places lists
+                document.getElementById("hotels").innerHTML = "<li class='error'>Failed to load nearby places</li>";
+                document.getElementById("restaurants").innerHTML = "<li class='error'>Failed to load nearby places</li>";
+                document.getElementById("cafes").innerHTML = "<li class='error'>Failed to load nearby places</li>";
+                document.getElementById("attractions").innerHTML = "<li class='error'>Failed to load nearby places</li>";
+            } finally {
+                spinner.classList.add("hidden");
+                document.getElementById("placesSection").classList.remove("hidden");
+            }
+        };
+
+        // Initialize default map on page load
+        window.onload = initDefaultMap;
+    </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-top: 50px;
+}
+
+h1 {
+    color: #333;
+}
+
+form {
+    margin: 20px auto;
+}
+
+input, button {
+    padding: 10px;
+    margin: 5px;
+    font-size: 16px;
+}
+
+button {
+    background-color:  rgb(56, 154, 172);
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: rgb(56, 154, 172);
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+}
+
+#logoutButton {
+    margin-top: 30px;
+    background-color: red;
+}
+
+#places-list {
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: left;
+}
+
+#map {
+    width: 90%;
+    margin: auto;
+    border-radius: 8px;
+}
